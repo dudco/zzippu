@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>WebSocket Echo Client</title>
+  <style>
+    body>div {
+      display: flex;
+    }
+
+    body>div>.zzippu {
+      width: 100px;
+      height: 100px;
+      margin-right: 15px;
+      background-color: green;
+    }
+
+    body>div>.zzippu.active {
+      background-color: red;
+    }
+
+    body>div:nth-child(3) {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>찌뿌 클라이언트</h1>
+
+  <div>
+    <div class="zzippu" id="ZZIPPU1"></div>
+    <div class="zzippu" id="ZZIPPU2"></div>
+    <div class="zzippu" id="ZZIPPU3"></div>
+  </div>
+
+  <div>
+    <div>현재 이용 인원 : </div>
+    <div id="active_num">0 / 3</div>
+  </div>
+  <script>
+    window.onload = () => {
+      var url = "ws://soylatte.kr:3000/";
+      var ws = new WebSocket(url);
+
+      ws.onopen = function () {
+        console.log("open")
+      };
+      ws.onclose = function () {
+        console.log('close');
+      };
+      ws.onmessage = function (e) {
+
+        if (e.data instanceof Blob) {
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            console.log('received blob: ' + encodeHexString(new Uint8Array(e.target.result)));
+          };
+          reader.readAsArrayBuffer(e.data);
+        } else if (e.data instanceof ArrayBuffer) {
+          console.log('received array buffer: ' + encodeHexString(new Uint8Array(e.data)));
+        } else {
+          if (e.data.length > 2) {
+            const actives = e.data.split(",")
+            console.log(actives);
+
+            const eles = document.getElementsByClassName("zzippu");
+
+            document.getElementById("active_num").innerText = actives.length + " / 3";
+
+            for (var i = 0; i < eles.length; i++) {
+              var ele = eles[i]
+              ele.classList.remove("active");
+            }
+
+            for (var i = 0; i < actives.length; i++) {
+              var ele = document.getElementById(actives[i])
+              ele.classList.add("active");
+            }
+          } else {
+            document.getElementById("active_num").innerText = "0 / 3";
+
+            const eles = document.getElementsByClassName("zzippu");
+            for (var i = 0; i < eles.length; i++) {
+              var ele = eles[i]
+              ele.classList.remove("active");
+            }
+          }
+        }
+      };
+      ws.onerror = function () {
+        console.log('error');
+      };
+    }
+  </script>
+</body>
+
+</html>
